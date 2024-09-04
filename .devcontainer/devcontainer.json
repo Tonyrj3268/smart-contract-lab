@@ -1,0 +1,19 @@
+// See https://containers.dev/implementors/json_reference/ for configuration reference
+{
+  "name": "Hardhat Development",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": 
+  {
+    "terminal.integrated.shell.linux": "/bin/bash",
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "juanblanco.solidity"
+      ]
+    }
+  },
+  "remoteUser": "node"
+}
