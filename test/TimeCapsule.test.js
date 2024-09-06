@@ -105,5 +105,60 @@ describe("TimeCapsule", function () {
         );
       });
     });
+
+    describe("Capsule Transfer", function () {
+      beforeEach(async function () {
+        const unlockTime = currentTime + 3600;
+        await timeCapsule.createCapsule("testHash", unlockTime);
+      });
+
+      it("Should transfer capsule ownership", async function () {
+        await timeCapsule.transferCapsule(1, addr1.address);
+
+        // 嘗試由新擁有者揭示膠囊
+        await ethers.provider.send("evm_increaseTime", [3600]);
+        await ethers.provider.send("evm_mine", []);
+        await expect(timeCapsule.connect(addr1).revealCapsule(1)).to.not.be
+          .reverted;
+      });
+
+      it("Should not allow non-owner to transfer capsule", async function () {
+        await expect(
+          timeCapsule.connect(addr1).transferCapsule(1, addr1.address)
+        ).to.be.revertedWith("Only the owner can transfer the capsule");
+      });
+
+      it("Should not allow transfer to zero address", async function () {
+        await expect(
+          timeCapsule.transferCapsule(1, ethers.ZeroAddress)
+        ).to.be.revertedWith("Cannot transfer to the zero address");
+      });
+    });
+
+    describe("Delete Capsule", function () {
+      beforeEach(async function () {
+        const unlockTime = currentTime + 3600;
+        await timeCapsule.createCapsule("testHash", unlockTime);
+      });
+
+      it("Should delete capsule before unlock time", async function () {
+        await timeCapsule.deleteCapsule(1);
+        await expect(timeCapsule.revealCapsule(1)).to.be.reverted;
+      });
+
+      it("Should not allow deletion after unlock time", async function () {
+        await ethers.provider.send("evm_increaseTime", [3600]);
+        await ethers.provider.send("evm_mine", []);
+        await expect(timeCapsule.deleteCapsule(1)).to.be.revertedWith(
+          "Cannot delete an unlocked capsule"
+        );
+      });
+
+      it("Should not allow non-owner to delete capsule", async function () {
+        await expect(
+          timeCapsule.connect(addr1).deleteCapsule(1)
+        ).to.be.revertedWith("Only the owner can delete the capsule");
+      });
+    });
   });
 });
